@@ -6,6 +6,7 @@ GoToAlien::GoToAlien(int agent_id, const alien_info& alien)
     agent = agent_id;
     score = -0;
     position my_position = position_agent(moi(), agent);
+    int used_actions = NB_POINTS_ACTION - points_action_agent(agent);
 
     int tour_depart = alien.tour_invasion + alien.duree_invasion;
 
@@ -15,7 +16,7 @@ GoToAlien::GoToAlien(int agent_id, const alien_info& alien)
     if(tour_depart < tour_actuel()) return; // Déjà parti
 
     Path p = quickest_path(my_position, alien.pos);
-    int turns_to_target = (p.cost+7)/8;
+    int turns_to_target = (p.cost+used_actions+7)/8;
     int turns_to_alien = std::max(turns_to_target, alien.tour_invasion - tour_actuel());
 
     if(turns_to_alien == 0)
@@ -51,6 +52,7 @@ PushEnemy::PushEnemy(int agent_id, const alien_info& alien)
     agent = agent_id;
     score = -0;
     position my_position = position_agent(moi(), agent);
+    int used_actions = NB_POINTS_ACTION - points_action_agent(agent);
 
     int tour_depart = alien.tour_invasion + alien.duree_invasion;
 
@@ -69,7 +71,7 @@ PushEnemy::PushEnemy(int agent_id, const alien_info& alien)
         if(!is_empty(attack_pos)) continue;
 
         Path p = quickest_path(my_position, attack_pos);
-        int turns_to_target = (p.cost+COUT_POUSSER+7)/8;
+        int turns_to_target = (p.cost+used_actions+COUT_POUSSER+7)/8;
 
         if(turns_to_target > turns_before_capture) continue;
 
@@ -91,7 +93,6 @@ void PushEnemy::apply()
         if(perform_move(agent, m) != OK) return;
     }
     if(pousser(agent, push_dir) != OK) return;
-    if(deplacer(agent, push_dir) != OK) return;
 
     end_of_turn = false;
 }
@@ -108,21 +109,24 @@ StayOnAlien::StayOnAlien(int agent_id)
 
     score = alien_score(alien);
 
-    for(direction dir : DIR)
+    if(points_action_agent(agent) >= COUT_POUSSER)
     {
-        position pushed = my_position + dir_to_vec(dir);
-        if(agent_sur_case(pushed) != adversaire()) continue;
-        if(can_push_toward(pushed, dir))
+        for(direction dir : DIR)
         {
-            int enemy_cost = std::min(COUT_GLISSADE, dist(pushed, glide_dest(pushed, dir)));
-            double dir_score = alien_score(alien) * (1 + (enemy_cost / NB_POINTS_ACTION));
-            if(dir_score > score)
+            position pushed = my_position + dir_to_vec(dir);
+            if(agent_sur_case(pushed) != adversaire()) continue;
+            if(can_push_toward(pushed, dir))
             {
-                push = true;
-                push_dir = dir;
-                score = dir_score;
+                int enemy_cost = std::min(COUT_GLISSADE, dist(pushed, glide_dest(pushed, dir)));
+                double dir_score = alien_score(alien) * (1 + (enemy_cost / NB_POINTS_ACTION));
+                if(dir_score > score)
+                {
+                    push = true;
+                    push_dir = dir;
+                    score = dir_score;
+                }
+                break;
             }
-            break;
         }
     }
 }
