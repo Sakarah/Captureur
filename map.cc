@@ -65,6 +65,8 @@ bool operator<(const DijkNode& a, const DijkNode& b)
 /// Return the move sequence between two points that is the quickest in terms of action points.
 Path quickest_path(position from, position to)
 {
+    if(!is_empty(to)) return Path{1000000000, std::deque<Move>()};
+
     position prev[TAILLE_BANQUISE][TAILLE_BANQUISE];
     for(int i = 0 ; i < TAILLE_BANQUISE ; i++)
     {
@@ -78,6 +80,9 @@ Path quickest_path(position from, position to)
     {
         DijkNode node = queue.top();
         queue.pop();
+
+        // Pas de planification sur plus de 3 tours
+        if(node.dist > 3*NB_POINTS_ACTION) break;
 
         if(prev[node.pos.ligne][node.pos.colonne] != INVALID_POS) continue;
         prev[node.pos.ligne][node.pos.colonne] = node.prev;
@@ -124,6 +129,6 @@ Path quickest_path(position from, position to)
         }
     }
 
-    return Path{0x7fffffff, std::deque<Move>()};
+    return Path{1000000000, std::deque<Move>()};
 }
 
