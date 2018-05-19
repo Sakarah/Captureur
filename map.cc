@@ -143,3 +143,9 @@ bool can_push_toward(position pos, direction dir)
     position obstacle = pos + dir_to_vec(dir);
     return is_empty(obstacle);
 }
+
+
+int alien_score(alien_info alien)
+{
+    return alien.points_capture * (1+alien.duree_invasion);
+}

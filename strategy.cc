@@ -1,21 +1,6 @@
 #include "strategy.hh"
 #include <iostream>
 
-void self_defend(int agent)
-{
-    position my_position = position_agent(moi(), agent);
-    for(direction dir : DIR)
-    {
-        position pushed = my_position + dir_to_vec(dir);
-        if(agent_sur_case(pushed) != adversaire()) continue;
-        if(can_push_toward(pushed, dir))
-        {
-            pousser(agent, dir);
-            break;
-        }
-    }
-}
-
 GoToAlien::GoToAlien(int agent_id, const alien_info& alien)
 {
     agent = agent_id;
@@ -50,9 +35,14 @@ GoToAlien::GoToAlien(int agent_id, const alien_info& alien)
 
 void GoToAlien::apply()
 {
+    end_of_turn = false;
     for(Move m: moves)
     {
-        if(perform_move(agent, m) != OK) break;
+        if(perform_move(agent, m) != OK)
+        {
+            end_of_turn = true;
+            break;
+        }
     }
 }
 
@@ -83,7 +73,7 @@ PushEnemy::PushEnemy(int agent_id, const alien_info& alien)
 
         if(turns_to_target > turns_before_capture) continue;
 
-        int dir_score = alien.points_capture / (turns_to_target+1);
+        int dir_score = alien_score(alien) / (turns_to_target+1);
         if(dir_score > score)
         {
             score = dir_score;
@@ -95,11 +85,50 @@ PushEnemy::PushEnemy(int agent_id, const alien_info& alien)
 
 void PushEnemy::apply()
 {
-    std::cout << "Push strategy applied :)" << std::endl;
+    end_of_turn = true;
     for(Move m: moves)
     {
         if(perform_move(agent, m) != OK) return;
     }
     if(pousser(agent, push_dir) != OK) return;
-    deplacer(agent, push_dir);
+    if(deplacer(agent, push_dir) != OK) return;
+
+    end_of_turn = false;
+}
+
+StayOnAlien::StayOnAlien(int agent_id)
+{
+    push = false;
+    agent = agent_id;
+
+    position my_position = position_agent(moi(), agent);
+
+    alien_info alien = info_alien(my_position);
+    if(alien.tour_invasion == -1) return;
+
+    score = alien_score(alien);
+
+    for(direction dir : DIR)
+    {
+        position pushed = my_position + dir_to_vec(dir);
+        if(agent_sur_case(pushed) != adversaire()) continue;
+        if(can_push_toward(pushed, dir))
+        {
+            int enemy_cost = std::min(COUT_GLISSADE, dist(pushed, glide_dest(pushed, dir)));
+            double dir_score = alien_score(alien) * (1 + (enemy_cost / NB_POINTS_ACTION));
+            if(dir_score > score)
+            {
+                push = true;
+                push_dir = dir;
+                score = dir_score;
+            }
+            break;
+        }
+    }
+}
+
+void StayOnAlien::apply()
+{
+    if(push) pousser(agent, push_dir);
+    end_of_turn = true;
 }

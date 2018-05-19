@@ -18,18 +18,17 @@ void jouer_tour()
     for(int agent = 0; agent < NB_AGENTS; agent++)
     {
         position my_position = position_agent(moi(), agent);
-        if(alien_sur_case(my_position))
-        {
-            self_defend(agent);
-            break;
-        }
 
         Strategy* best_strategy = nullptr;
         double best_score = +0;
         for(alien_info alien : aliens)
         {
             Strategy* strategy = nullptr;
-            if(agent_sur_case(alien.pos) == adversaire())
+            if(my_position == alien.pos)
+            {
+                strategy = new StayOnAlien(agent);
+            }
+            else if(agent_sur_case(alien.pos) == adversaire())
             {
                 strategy = new PushEnemy(agent, alien);
             }
