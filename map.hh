@@ -17,11 +17,15 @@ struct Path
 };
 
 const position INVALID_POS = position{-1,-1};
+const direction DIR[] = {NORD, OUEST, SUD, EST};
 
 position dir_to_vec(direction dir);
 bool is_empty(position pos);
 position glide_dest(position from, direction dir);
 erreur perform_move(int id_agent, Move move);
 Path quickest_path(position from, position to);
+
+direction opposite(direction dir);
+bool can_push_toward(position pos, direction dir);
 
 #endif // MAP_HH

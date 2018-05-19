@@ -11,8 +11,8 @@ void partie_init()
 /// Fonction appelée à chaque tour.
 void jouer_tour()
 {
-    std::chrono::time_point<std::chrono::system_clock> start, end;
-    start = std::chrono::system_clock::now();
+    std::clock_t begin, end;
+    begin = std::clock();
 
     std::vector<alien_info> aliens = liste_aliens();
     std::cout << aliens.size() << std::endl;
@@ -22,7 +22,21 @@ void jouer_tour()
         std::cout << agent << ":";
 
         position my_position = position_agent(moi(), agent);
-        if(alien_sur_case(my_position)) continue;
+        if(alien_sur_case(my_position))
+        {
+            // Self-défense !
+            for(direction dir : DIR)
+            {
+                position pushed = my_position + dir_to_vec(dir);
+                if(agent_sur_case(pushed) != adversaire()) continue;
+                if(can_push_toward(pushed, dir))
+                {
+                    pousser(agent, dir);
+                    break;
+                }
+            }
+            continue;
+        }
 
         std::deque<Move> best_moves = std::deque<Move>();
         position best_alien = position{-1,-1};
@@ -68,9 +82,8 @@ void jouer_tour()
         }
     }
 
-    end = std::chrono::system_clock::now();
-    std::chrono::duration<double> elapsed_seconds = end-start;
-    std::cout << "elapsed time: " << elapsed_seconds.count() << "s" << std::endl;
+    end = std::clock();
+    std::cout << "elapsed time: " << double(end - begin)/CLOCKS_PER_SEC << std::endl;
 }
 
 /// Fonction appelée à la fin de la partie.

@@ -1,8 +1,6 @@
 #include "map.hh"
 #include <queue>
 
-const direction DIR[] = {NORD, OUEST, SUD, EST};
-
 position dir_to_vec(direction dir)
 {
     if(dir == NORD) return position{-1, 0};
@@ -132,3 +130,16 @@ Path quickest_path(position from, position to)
     return Path{1000000000, std::deque<Move>()};
 }
 
+direction opposite(direction dir)
+{
+    if(dir == NORD) return SUD;
+    else if(dir == SUD) return NORD;
+    else if(dir == OUEST) return EST;
+    else return OUEST;
+}
+
+bool can_push_toward(position pos, direction dir)
+{
+    position obstacle = pos + dir_to_vec(dir);
+    return is_empty(obstacle);
+}
