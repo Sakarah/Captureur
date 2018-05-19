@@ -17,49 +17,42 @@ void jouer_tour()
     std::vector<alien_info> aliens = liste_aliens();
     for(int agent = 0; agent < NB_AGENTS; agent++)
     {
-        bool end_turn = false;
-        while(!end_turn)
+        position my_position = position_agent(moi(), agent);
+
+        Strategy* best_strategy = nullptr;
+        double best_score = +0;
+        for(alien_info alien : aliens)
         {
-            position my_position = position_agent(moi(), agent);
-
-            Strategy* best_strategy = nullptr;
-            double best_score = +0;
-            for(alien_info alien : aliens)
+            Strategy* strategy = nullptr;
+            if(my_position == alien.pos)
             {
-                Strategy* strategy = nullptr;
-                if(my_position == alien.pos)
-                {
-                    strategy = new StayOnAlien(agent);
-                }
-                else if(agent_sur_case(alien.pos) == adversaire())
-                {
-                    strategy = new PushEnemy(agent, alien);
-                }
-                else
-                {
-                    strategy = new GoToAlien(agent, alien);
-                }
-
-                if(strategy->score > best_score)
-                {
-                    best_score = strategy->score;
-                    delete best_strategy;
-                    best_strategy = strategy;
-                }
+                strategy = new StayOnAlien(agent);
             }
-
-            if(best_strategy)
+            else if(agent_sur_case(alien.pos) == adversaire())
             {
-                best_strategy->apply();
-                end_turn = best_strategy->end_of_turn;
-                delete best_strategy;
+                strategy = new PushEnemy(agent, alien);
             }
             else
             {
-                end_turn = true;
+                strategy = new GoToAlien(agent, alien);
             }
 
-            if(points_action_agent(agent) == 0) end_turn = true;
+            if(strategy->score > best_score)
+            {
+                best_score = strategy->score;
+                delete best_strategy;
+                best_strategy = strategy;
+            }
+        }
+
+        if(best_strategy)
+        {
+            best_strategy->apply();
+            delete best_strategy;
+        }
+        else
+        {
+            std::cout << "idle..." << std::endl;
         }
     }
 
