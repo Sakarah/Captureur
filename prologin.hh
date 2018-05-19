@@ -80,6 +80,7 @@ typedef enum erreur {
   ID_AGENT_INVALIDE, /* <- L'agent spécifié n'existe pas. */
   RIEN_A_POUSSER, /* <- Aucun agent à pousser dans la direction indiquée. */
   DRAPEAU_INVALIDE, /* <- Le drapeau spécifié n'existe pas. */
+  ACTION_INVALIDE, /* <- L'action spécifiée n'existe pas. */
 } erreur;
 // This is needed for old compilers
 namespace std
@@ -130,6 +131,10 @@ typedef struct position {
   int colonne;  /* <- Coordonnée : colonne */
 } position;
 
+inline position operator+(const position& a, const position& b)
+{
+    return position{a.ligne + b.ligne, a.colonne + b.colonne};
+}
 
 /// Alien à capturer durant la mission.
 typedef struct alien_info {
