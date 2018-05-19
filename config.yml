@@ -1,0 +1,11 @@
+rules: libprologin2018.so
+verbose: 3
+map: symmetry.map
+clients:
+ - ./champion.so
+ - ./champion.so
+names:
+ - Sakarah 1
+ - Sakarah 2
+spectators:
+ - /opt/prologin2018-gui.so
