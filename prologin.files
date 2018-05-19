@@ -1,5 +1,7 @@
 map.cc
 map.hh
+strategy.cc
+strategy.hh
 symmetry.map
 Makefile
 config.yml

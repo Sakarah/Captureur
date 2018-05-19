@@ -1,4 +1,4 @@
-#include "map.hh"
+#include "strategy.hh"
 #include <iostream>
 #include <chrono>
 
@@ -15,70 +15,45 @@ void jouer_tour()
     begin = std::clock();
 
     std::vector<alien_info> aliens = liste_aliens();
-    std::cout << aliens.size() << std::endl;
-
     for(int agent = 0; agent < NB_AGENTS; agent++)
     {
-        std::cout << agent << ":";
-
         position my_position = position_agent(moi(), agent);
         if(alien_sur_case(my_position))
         {
-            // Self-défense !
-            for(direction dir : DIR)
-            {
-                position pushed = my_position + dir_to_vec(dir);
-                if(agent_sur_case(pushed) != adversaire()) continue;
-                if(can_push_toward(pushed, dir))
-                {
-                    pousser(agent, dir);
-                    break;
-                }
-            }
-            continue;
+            self_defend(agent);
+            break;
         }
 
-        std::deque<Move> best_moves = std::deque<Move>();
-        position best_alien = position{-1,-1};
-        float best_score = 0;
+        Strategy* best_strategy = nullptr;
+        double best_score = +0;
         for(alien_info alien : aliens)
         {
-            int tour_depart = alien.tour_invasion + alien.duree_invasion;
-
-            // Vérifier que l'alien est encore/bientôt là
-            if(tour_actuel() + 3 < alien.tour_invasion) continue; // Pas encore là
-            if(alien.capture_en_cours == NB_TOURS_CAPTURE) continue; // Déjà capturé
-            if(tour_depart < tour_actuel()) continue; // Déjà parti
-
-            Path p = quickest_path(my_position, alien.pos);
-            int turns_to_target = (p.cost+7)/8;
-            int turns_to_alien = std::max(turns_to_target, alien.tour_invasion - tour_actuel());
-            std::cout << p.cost << "|";
-
-            if(turns_to_alien == 0)
+            Strategy* strategy = nullptr;
+            if(agent_sur_case(alien.pos) == adversaire())
             {
-                // Vérifier que la capture est toujours possible
-                if(tour_depart - tour_actuel() < NB_TOURS_CAPTURE - alien.capture_en_cours) continue;
+                strategy = new PushEnemy(agent, alien);
             }
             else
             {
-                // Vérifier que la capture est possible après le déplacement
-                if(tour_depart - tour_actuel() - turns_to_target < NB_TOURS_CAPTURE) continue;
+                strategy = new GoToAlien(agent, alien);
             }
 
-            float score = alien.points_capture / (turns_to_alien+1);
-            if(score > best_score)
+            if(strategy->score > best_score)
             {
-                std::swap(best_moves, p.path);
-                best_score = score;
-                best_alien = alien.pos;
+                best_score = strategy->score;
+                delete best_strategy;
+                best_strategy = strategy;
             }
         }
 
-        std::cout << " -> (" << best_alien.ligne << "," << best_alien.colonne << ")" << std::endl;
-        for(Move m: best_moves)
+        if(best_strategy)
         {
-            if(perform_move(agent, m) != OK) break;
+            best_strategy->apply();
+            delete best_strategy;
+        }
+        else
+        {
+            std::cout << "idle..." << std::endl;
         }
     }
 
