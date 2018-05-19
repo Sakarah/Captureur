@@ -35,14 +35,9 @@ GoToAlien::GoToAlien(int agent_id, const alien_info& alien)
 
 void GoToAlien::apply()
 {
-    end_of_turn = false;
     for(Move m: moves)
     {
-        if(perform_move(agent, m) != OK)
-        {
-            end_of_turn = true;
-            break;
-        }
+        if(perform_move(agent, m) != OK) break;
     }
 }
 
@@ -85,15 +80,12 @@ PushEnemy::PushEnemy(int agent_id, const alien_info& alien)
 
 void PushEnemy::apply()
 {
-    end_of_turn = true;
     for(Move m: moves)
     {
         if(perform_move(agent, m) != OK) return;
     }
     if(pousser(agent, push_dir) != OK) return;
     if(deplacer(agent, push_dir) != OK) return;
-
-    end_of_turn = false;
 }
 
 StayOnAlien::StayOnAlien(int agent_id)
@@ -130,5 +122,15 @@ StayOnAlien::StayOnAlien(int agent_id)
 void StayOnAlien::apply()
 {
     if(push) pousser(agent, push_dir);
-    end_of_turn = true;
+}
+
+Idle::Idle(int agent_id)
+{
+    agent = agent_id;
+    score = 0;
+}
+
+void Idle::apply()
+{
+    std::cout << "idle..." << std::endl;
 }

@@ -9,7 +9,6 @@ public:
     virtual ~Strategy() = default;
     int agent;
     double score;
-    bool end_of_turn;
     virtual void apply() = 0;
 };
 
@@ -40,6 +39,13 @@ public:
 private:
     bool push;
     direction push_dir;
+};
+
+class Idle : public Strategy
+{
+public:
+    Idle(int agent_id);
+    void apply() override;
 };
 
 #endif // STRATEGY_HH
