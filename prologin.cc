@@ -28,7 +28,7 @@ void jouer_tour()
             position my_position = position_agent(moi(), agent);
 
             Strategy* best_strategy = nullptr;
-            double best_score = +0;
+            double best_score = 1e-300; // Avoid stupid actions
             int best_alien = -1;
 
             for(unsigned int a = 0; a < aliens.size()+NB_AGENTS; a++)

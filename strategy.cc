@@ -11,7 +11,7 @@ GoToAlien::GoToAlien(int agent_id, const alien_info& alien)
     tour_depart = std::min(tour_depart, 100);
 
     // Vérifier que l'alien est encore/bientôt là
-    if(tour_actuel() + 5 < alien.tour_invasion) return; // Pas encore là
+    if(tour_actuel() + 3 < alien.tour_invasion) return; // Pas encore là
     if(alien.capture_en_cours == NB_TOURS_CAPTURE) return; // Déjà capturé
     if(tour_depart < tour_actuel()) return; // Déjà parti
 
