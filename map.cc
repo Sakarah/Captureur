@@ -61,7 +61,7 @@ bool operator<(const DijkNode& a, const DijkNode& b)
 }
 
 /// Return the move sequence between two points that is the quickest in terms of action points.
-Path quickest_path(position from, position to, int action_limit)
+Path quickest_path(position from, position to, int action_limit, int adversaire)
 {
     if(from == to) return Path{0, std::deque<Move>()};
     if(!is_empty(to)) return Path{1000000000, std::deque<Move>()};
@@ -105,7 +105,7 @@ Path quickest_path(position from, position to, int action_limit)
                     else dir = SUD;
                 }
 
-                if(agent_sur_case(to) == adversaire()) path.push_front(Move{ACTION_POUSSER, dir});
+                if(agent_sur_case(to) == adversaire) path.push_front(Move{ACTION_POUSSER, dir});
 
                 if(dist(to, step) > 1) path.push_front(Move{ACTION_GLISSER, dir});
                 else path.push_front(Move{ACTION_DEPLACER, dir});
@@ -122,9 +122,12 @@ Path quickest_path(position from, position to, int action_limit)
             {
                 queue.push(DijkNode{node.dist + COUT_DEPLACEMENT, neigh, node.pos});
             }
-            else if(agent_sur_case(neigh) == adversaire())
+            else if(agent_sur_case(neigh) == adversaire)
             {
-                queue.push(DijkNode{node.dist + COUT_DEPLACEMENT + COUT_POUSSER, neigh, node.pos});
+                if(can_push_toward(neigh, find_dir(node.pos, neigh)))
+                {
+                    queue.push(DijkNode{node.dist + COUT_DEPLACEMENT + COUT_POUSSER, neigh, node.pos});
+                }
             }
 
             position glide_pos = glide_dest(node.pos, dir);
@@ -143,7 +146,8 @@ direction opposite(direction dir)
     if(dir == NORD) return SUD;
     else if(dir == SUD) return NORD;
     else if(dir == OUEST) return EST;
-    else return OUEST;
+    else if(dir == EST) return OUEST;
+    return INVALIDE;
 }
 
 direction turn_trigo(direction dir)
@@ -151,7 +155,8 @@ direction turn_trigo(direction dir)
     if(dir == NORD) return OUEST;
     else if(dir == OUEST) return SUD;
     else if(dir == SUD) return EST;
-    else return NORD;
+    else if(dir == EST) return NORD;
+    return INVALIDE;
 }
 
 bool can_push_toward(position pos, direction dir)
@@ -190,11 +195,12 @@ direction find_dir(position origin, position target)
         if(origin.colonne < target.colonne) return EST;
         else return OUEST;
     }
-    else
+    else if(origin.colonne == target.colonne)
     {
         if(origin.ligne < target.ligne) return SUD;
         else return NORD;
     }
+    return INVALIDE;
 }
 
 std::vector<ThreatAxis> pos_threats_axies(position origin)
@@ -235,32 +241,42 @@ std::vector<ThreatAxis> pos_threats_axies(position origin)
     return axies;
 }
 
-std::vector<position> list_current_threats(position origin)
+int count_threats(position origin)
 {
-    std::vector<position> threats;
-    for(direction dir : DIR)
+    int threats = 0;
+    for(int opp_id = 0; opp_id < NB_AGENTS; opp_id++)
     {
-        if(!can_push_toward(origin, opposite(dir))) continue;
+        position opponent_pos = position_agent(adversaire(), opp_id);
+        if(alien_sur_case(opponent_pos)) continue;
 
-        position dir_vec = dir_to_vec(dir);
-        position pos = origin + dir_vec;
-        while(is_empty(pos) || agent_sur_case(pos) == moi())
+        bool threat = false;
+
+        for(direction dir : DIR)
         {
-            pos = pos + dir_vec;
+            if(!can_push_toward(origin, dir)) continue;
+            position attack_pos = origin + dir_to_vec(opposite(dir));
+            if(!is_empty(attack_pos) && opponent_pos != attack_pos) continue;
+
+            Path p = quickest_path(opponent_pos, attack_pos, NB_POINTS_ACTION-COUT_POUSSER, moi());
+            if(p.cost <= NB_POINTS_ACTION-COUT_POUSSER) threat = true;
         }
 
-        if(agent_sur_case(pos) == adversaire()) threats.push_back(pos);
+        if(threat) threats++;
     }
     return threats;
 }
 
-std::vector<Threat> compute_threats(const std::vector<alien_info>& aliens)
+AttackInfo best_opponent_attack(int opponent_id)
 {
-    std::vector<Threat> threats;
-    for(alien_info alien: aliens)
+    AttackInfo best_attack;
+    best_attack.score = 0;
+    for(int ally_id = 0 ; ally_id < NB_AGENTS ; ally_id++)
     {
-        if(!alien_sur_case(alien.pos)) continue;
-        if(agent_sur_case(alien.pos) != moi()) continue;
+        position opponent_pos = position_agent(adversaire(), opponent_id);
+        position ally_pos = position_agent(moi(), ally_id);
+
+        if(!alien_sur_case(ally_pos)) continue;
+        alien_info alien = info_alien(ally_pos);
 
         int tour_depart = alien.tour_invasion + alien.duree_invasion;
         int turns_before_capture = NB_TOURS_CAPTURE - alien.capture_en_cours;
@@ -269,14 +285,22 @@ std::vector<Threat> compute_threats(const std::vector<alien_info>& aliens)
 
         int alien_val = alien_score(alien);
 
-        std::vector<position> alien_threats = list_current_threats(alien.pos);
-        int nb_threats = alien_threats.size();
-        for(position th_pos : alien_threats)
+        for(direction dir : DIR)
         {
-            // Homogeneity: Here implicit division by one turn
-            //                               vvvvvvvvvvvvvvvvvvvv
-            threats.push_back(Threat{th_pos, alien_val/nb_threats, alien.pos});
+            if(!can_push_toward(ally_pos, dir)) continue;
+            position attack_pos = ally_pos + dir_to_vec(opposite(dir));
+            if(!is_empty(attack_pos) && opponent_pos != attack_pos) continue;
+
+            Path p = quickest_path(opponent_pos, attack_pos, NB_POINTS_ACTION-COUT_POUSSER, moi());
+            if(p.cost > NB_POINTS_ACTION-COUT_POUSSER) continue;
+
+            if(alien_val > best_attack.score)
+            {
+                best_attack.score = alien_val;
+                best_attack.attack_pos = attack_pos;
+                best_attack.target = ally_pos;
+            }
         }
     }
-    return threats;
+    return best_attack;
 }

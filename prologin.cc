@@ -15,9 +15,8 @@ void jouer_tour()
     begin = std::clock();
 
     std::vector<alien_info> aliens = liste_aliens();
-    std::vector<Threat> threats = compute_threats(aliens);
 
-    std::vector<Strategy*> alien_strategy(aliens.size()+threats.size(), nullptr);
+    std::vector<Strategy*> alien_strategy(aliens.size()+4, nullptr);
     Strategy* agent_strategy[NB_AGENTS] = { nullptr, nullptr, nullptr, nullptr };
     int fixed_strategies = 0;
     while(fixed_strategies != NB_AGENTS)
@@ -32,7 +31,7 @@ void jouer_tour()
             double best_score = +0;
             int best_alien = -1;
 
-            for(unsigned int a = 0; a < aliens.size()+threats.size(); a++)
+            for(unsigned int a = 0; a < aliens.size()+NB_AGENTS; a++)
             {
                 Strategy* strategy = nullptr;
 
@@ -54,8 +53,7 @@ void jouer_tour()
                 }
                 else
                 {
-                    Threat threat = threats[a-aliens.size()];
-                    strategy = new ElimThreat(agent, threat);
+                    strategy = new ElimThreat(agent, a-aliens.size());
                 }
 
                 if(alien_strategy[a] && strategy->score <= alien_strategy[a]->score) continue;
@@ -85,8 +83,9 @@ void jouer_tour()
                 }
                 else
                 {
-                    std::cout << agent << " |> l" << threats[best_alien-aliens.size()].adv_pos.ligne
-                              << " c" << threats[best_alien-aliens.size()].adv_pos.colonne << std::endl;
+                    position adv_pos = position_agent(adversaire(), best_alien-aliens.size());
+                    std::cout << agent << " |> l" << adv_pos.ligne
+                              << " c" << adv_pos.colonne << std::endl;
                 }
 
                 alien_strategy[best_alien] = best_strategy;
@@ -115,4 +114,3 @@ void partie_fin()
 {
     // Rien à libérer
 }
-

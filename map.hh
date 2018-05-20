@@ -24,7 +24,8 @@ bool is_empty(position pos);
 position glide_dest(position from, direction dir);
 erreur perform_move(int id_agent, Move move);
 int dist(position a, position b);
-Path quickest_path(position from, position to, int turn_limit = 3*NB_POINTS_ACTION);
+Path quickest_path(position from, position to,
+                   int turn_limit = 3*NB_POINTS_ACTION, int adversaire = adversaire());
 
 direction opposite(direction dir);
 direction turn_trigo(direction dir);
@@ -54,10 +55,16 @@ struct Threat
 /// Liste les axes de menaces depuis une case
 std::vector<ThreatAxis> pos_threats_axies(position pos);
 
-/// Liste les menaces de l'adversaire sur une case
-std::vector<position> list_current_threats(position origin);
+/// Compte le nombre de menaces de l'adversaire sur une case
+int count_threats(position origin);
 
-/// Ajoute les menaces en tant que faux aliens dans la liste
-std::vector<Threat> compute_threats(const std::vector<alien_info>& aliens);
+struct AttackInfo
+{
+    position target;
+    double score;
+    position attack_pos;
+};
+
+AttackInfo best_opponent_attack(int opponent_id);
 
 #endif // MAP_HH

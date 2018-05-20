@@ -44,7 +44,7 @@ private:
 class ElimThreat : public Strategy
 {
 public:
-    ElimThreat(int agent_id, Threat threat);
+    ElimThreat(int agent_id, int opp_id);
     void apply();
 private:
     std::deque<Move> moves;

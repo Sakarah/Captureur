@@ -124,39 +124,83 @@ void StayOnAlien::apply()
     if(push) pousser(agent, push_dir);
 }
 
-ElimThreat::ElimThreat(int agent_id, Threat threat)
+ElimThreat::ElimThreat(int agent_id, int opp_id)
 {
     push = false;
     agent = agent_id;
     score = -0;
 
+    AttackInfo atk = best_opponent_attack(opp_id);
+    atk.score /= count_threats(atk.target);
+
     position my_position = position_agent(moi(), agent);
-    direction dir = find_dir(threat.ally_pos, threat.adv_pos);
-    position dir_vec = dir_to_vec(dir);
+    position adv_pos = position_agent(adversaire(), opp_id);
+    position ally_pos = atk.target;
 
-    for(position def_pos = threat.ally_pos+dir_vec; def_pos != threat.adv_pos; def_pos = def_pos + dir_vec)
+    if(alien_sur_case(adv_pos)) return;
+
+    direction dir = find_dir(ally_pos, adv_pos);
+    if(dir != INVALIDE)
     {
-        Path p = quickest_path(my_position, def_pos, NB_POINTS_ACTION);
-        if(p.cost > NB_POINTS_ACTION) continue;
+        position dir_vec = dir_to_vec(dir);
 
-        score = threat.value;
-        std::swap(p.path, moves);
+        for(position def_pos = ally_pos+dir_vec; def_pos != adv_pos; def_pos = def_pos + dir_vec)
+        {
+            Path p = quickest_path(my_position, def_pos, NB_POINTS_ACTION);
+            if(p.cost > NB_POINTS_ACTION) continue;
+
+            // TODO : Better move emulation
+            int cancel_count = 0;
+            for(Move m : p.path)
+            {
+                if(perform_move(agent, m) != OK) break;
+                cancel_count++;
+            }
+            AttackInfo other_atk = best_opponent_attack(opp_id);
+            for(int c = 0; c < cancel_count; c++) annuler();
+
+            double cur_score = atk.score - other_atk.score;
+            if(cur_score > score)
+            {
+                score = cur_score;
+                std::swap(p.path, moves);
+            }
+        }
     }
 
     // Pousse si possible
     for(direction pdir : DIR)
     {
-        if(!can_push_toward(threat.adv_pos, pdir)) continue;
-        position attack_pos = threat.adv_pos + dir_to_vec(opposite(pdir));
+        if(!can_push_toward(adv_pos, pdir)) continue;
+        position attack_pos = adv_pos + dir_to_vec(opposite(pdir));
         if(!is_empty(attack_pos) && my_position != attack_pos) continue;
 
         Path push_path = quickest_path(my_position, attack_pos, NB_POINTS_ACTION-COUT_POUSSER);
         if(push_path.cost <= NB_POINTS_ACTION-COUT_POUSSER)
         {
-            push = true;
-            push_dir = pdir;
-            score = threat.value;
-            std::swap(push_path.path, moves);
+            // TODO : Better move emulation here too
+            int cancel_count = 0;
+            for(Move m : push_path.path)
+            {
+                if(perform_move(agent, m) != OK) goto end_move;
+                cancel_count++;
+            }
+            if(pousser(agent, pdir) != OK) goto end_move;
+            cancel_count++;
+            if(deplacer(agent, pdir) != OK) goto end_move;
+            cancel_count++;
+            end_move:
+            AttackInfo other_atk = best_opponent_attack(opp_id);
+            for(int c = 0; c < cancel_count; c++) annuler();
+
+            double cur_score = atk.score - other_atk.score;
+            if(cur_score >= score)
+            {
+                score = cur_score;
+                push = true;
+                push_dir = pdir;
+                std::swap(push_path.path, moves);
+            }
         }
     }
 }

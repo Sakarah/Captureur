@@ -57,6 +57,7 @@ typedef enum direction {
   EST, /* <- Direction : est */
   SUD, /* <- Direction : sud */
   OUEST, /* <- Direction : ouest */
+  INVALIDE, /* <- Direction pour traiter les cas absurdes */
 } direction;
 // This is needed for old compilers
 namespace std
