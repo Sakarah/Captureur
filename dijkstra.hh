@@ -9,7 +9,7 @@ struct Path
     std::deque<Move> path;
 };
 
-Path quickest_path(position from, position to,
+Path quickest_path(position from, position to, int view_mask,
                    int turn_limit = 5*NB_POINTS_ACTION, int adversaire = adversaire());
 
 #endif // DIJKSTRA_HH

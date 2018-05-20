@@ -14,10 +14,10 @@ bool operator<(const DijkNode& a, const DijkNode& b)
 }
 
 /// Return the move sequence between two points that is the quickest in terms of action points.
-Path quickest_path(position from, position to, int action_limit, int adversaire)
+Path quickest_path(position from, position to, int view_mask, int action_limit, int adversaire)
 {
     if(from == to) return Path{0, std::deque<Move>()};
-    if(!is_empty(to)) return Path{1000000000, std::deque<Move>()};
+    if(!is_empty(to, view_mask)) return Path{1000000000, std::deque<Move>()};
 
     position prev[TAILLE_BANQUISE][TAILLE_BANQUISE];
     for(int i = 0 ; i < TAILLE_BANQUISE ; i++)
@@ -71,19 +71,19 @@ Path quickest_path(position from, position to, int action_limit, int adversaire)
         for(direction dir : DIR)
         {
             position neigh = node.pos + dir_to_vec(dir);
-            if(is_empty(neigh))
+            if(is_empty(neigh, view_mask))
             {
                 queue.push(DijkNode{node.dist + COUT_DEPLACEMENT, neigh, node.pos});
             }
             else if(agent_sur_case(neigh) == adversaire)
             {
-                if(can_push_toward(neigh, find_dir(node.pos, neigh)))
+                if(can_push_toward(neigh, find_dir(node.pos, neigh), view_mask))
                 {
                     queue.push(DijkNode{node.dist + COUT_DEPLACEMENT + COUT_POUSSER, neigh, node.pos});
                 }
             }
 
-            position glide_pos = glide_dest(node.pos, dir);
+            position glide_pos = glide_dest(node.pos, dir, view_mask);
             if(glide_pos != node.pos)
             {
                 queue.push(DijkNode{node.dist + COUT_GLISSADE, glide_pos, node.pos});

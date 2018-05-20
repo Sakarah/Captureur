@@ -15,7 +15,7 @@ GoToAlien::GoToAlien(int agent_id, const alien_info& alien)
     if(alien.capture_en_cours == NB_TOURS_CAPTURE) return; // Déjà capturé
     if(tour_depart < tour_actuel()) return; // Déjà parti
 
-    Path p = quickest_path(my_position, alien.pos);
+    Path p = quickest_path(my_position, alien.pos, MOI);
     int turns_to_target = (p.cost+7)/8;
     int turns_to_alien = std::max(turns_to_target, alien.tour_invasion - tour_actuel());
 
@@ -61,11 +61,11 @@ PushEnemy::PushEnemy(int agent_id, const alien_info& alien)
 
     for(direction dir : DIR)
     {
-        if(!can_push_toward(alien.pos, dir)) continue;
+        if(!can_push_toward(alien.pos, dir, 0)) continue;
         position attack_pos = alien.pos + dir_to_vec(opposite(dir));
-        if(!is_empty(attack_pos) && my_position != attack_pos) continue;
+        if(!is_empty(attack_pos, 0) && my_position != attack_pos) continue;
 
-        Path p = quickest_path(my_position, attack_pos);
+        Path p = quickest_path(my_position, attack_pos, MOI);
         int turns_to_target = (p.cost+COUT_POUSSER+7)/8;
 
         if(turns_to_target > turns_before_capture) continue;
@@ -106,9 +106,9 @@ StayOnAlien::StayOnAlien(int agent_id)
     {
         position pushed = my_position + dir_to_vec(dir);
         if(agent_sur_case(pushed) != adversaire()) continue;
-        if(can_push_toward(pushed, dir))
+        if(can_push_toward(pushed, dir, MOI))
         {
-            int enemy_cost = std::min(COUT_GLISSADE, dist(pushed, glide_dest(pushed, dir)));
+            int enemy_cost = std::min(COUT_GLISSADE, dist(pushed, glide_dest(pushed, dir, MOI)));
             double dir_score = alien_def_score(alien) * (1 + (enemy_cost / NB_POINTS_ACTION));
             if(dir_score > score)
             {
@@ -132,8 +132,8 @@ ElimThreat::ElimThreat(int agent_id, int opp_id)
     agent = agent_id;
     score = -0;
 
-    AttackInfo atk = best_opponent_attack(opp_id);
-    atk.score /= count_threats(atk.target);
+    AttackInfo atk = best_opponent_attack(opp_id, MOI|ADV);
+    atk.score /= count_threats(atk.target, MOI|ADV);
 
     position my_position = position_agent(moi(), agent);
     position adv_pos = position_agent(adversaire(), opp_id);
@@ -173,7 +173,7 @@ ElimThreat::ElimThreat(int agent_id, int opp_id)
             if(perform_move(agent, m) != OK) break;
             cancel_count++;
         }
-        AttackInfo other_atk = best_opponent_attack(opp_id);
+        AttackInfo other_atk = best_opponent_attack(opp_id, ADV);
         for(int c = 0; c < cancel_count; c++) annuler();
 
         double cur_score = atk.score - other_atk.score;
@@ -187,9 +187,9 @@ ElimThreat::ElimThreat(int agent_id, int opp_id)
     // Pousse si possible
     for(direction pdir : DIR)
     {
-        if(!can_push_toward(adv_pos, pdir)) continue;
+        if(!can_push_toward(adv_pos, pdir, MOI)) continue;
         position attack_pos = adv_pos + dir_to_vec(opposite(pdir));
-        if(!is_empty(attack_pos) && my_position != attack_pos) continue;
+        if(!is_empty(attack_pos, MOI) && my_position != attack_pos) continue;
 
         bool is_just_near = dist(adv_pos, ally_pos) == 1;
         int min_action_left = NB_POINTS_ACTION - COUT_POUSSER - (is_just_near ? 1 : 0);
@@ -208,7 +208,7 @@ ElimThreat::ElimThreat(int agent_id, int opp_id)
             if(deplacer(agent, pdir) != OK) goto end_move;
             cancel_count++;
             end_move:
-            AttackInfo other_atk = best_opponent_attack(opp_id);
+            AttackInfo other_atk = best_opponent_attack(opp_id, ADV);
             for(int c = 0; c < cancel_count; c++) annuler();
 
             double cur_score = atk.score - other_atk.score;
@@ -256,7 +256,7 @@ void Idle::apply()
         position ally_pos = position_agent(moi(), i);
         for(direction dir : DIR)
         {
-            Path p = quickest_path(my_pos, ally_pos+dir_to_vec(dir));
+            Path p = quickest_path(my_pos, ally_pos+dir_to_vec(dir), 0);
             if(p.cost < dist)
             {
                 dist = p.cost;

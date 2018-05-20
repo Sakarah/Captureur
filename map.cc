@@ -10,19 +10,36 @@ position dir_to_vec(direction dir)
     return position{0,0};
 }
 
-bool is_empty(position pos)
+bool is_empty(position pos, int view_mask)
 {
-    return type_case(pos) == LIBRE && agent_sur_case(pos) == -1;
+    if(type_case(pos) != LIBRE) return false;
+
+    // Ne jamais ignorer sur un alien
+    if(agent_sur_case(pos) != -1 && alien_sur_case(pos)) return false;
+
+    // Ignore if mask set
+    if(agent_sur_case(pos) == moi() && view_mask & MOI) return true;
+    if(agent_sur_case(pos) == adversaire() && view_mask & ADV) return true;
+
+    return agent_sur_case(pos) == -1;
+}
+
+int opponent(int player)
+{
+    if(player == moi()) return adversaire();
+    else if(player == adversaire()) return moi();
+
+    return player;
 }
 
 /// Retrun the position reached with a glide in the specified direction
-position glide_dest(position from, direction dir)
+position glide_dest(position from, direction dir, int view_mask)
 {
     position dir_vec = dir_to_vec(dir);
     while(true)
     {
         position next = from + dir_vec;
-        if(!is_empty(next)) return from;
+        if(!is_empty(next, view_mask)) return from;
         from = next;
     }
 }
@@ -65,10 +82,10 @@ direction turn_trigo(direction dir)
     return INVALIDE;
 }
 
-bool can_push_toward(position pos, direction dir)
+bool can_push_toward(position pos, direction dir, int view_mask)
 {
     position obstacle = pos + dir_to_vec(dir);
-    return is_empty(obstacle);
+    return is_empty(obstacle, view_mask);
 }
 
 
@@ -114,7 +131,7 @@ std::vector<ThreatAxis> pos_threats_axies(position origin)
     std::vector<ThreatAxis> axies;
     for(direction dir : DIR)
     {
-        if(!can_push_toward(origin, opposite(dir))) continue;
+        if(!can_push_toward(origin, opposite(dir), 0)) continue;
 
         ThreatAxis threat;
         threat.push_pos = origin + dir_to_vec(dir);
@@ -147,7 +164,7 @@ std::vector<ThreatAxis> pos_threats_axies(position origin)
     return axies;
 }
 
-int count_threats(position origin)
+int count_threats(position origin, int view_mask)
 {
     int threats = 0;
     for(int opp_id = 0; opp_id < NB_AGENTS; opp_id++)
@@ -159,9 +176,9 @@ int count_threats(position origin)
 
         for(direction dir : DIR)
         {
-            if(!can_push_toward(origin, dir)) continue;
+            if(!can_push_toward(origin, dir, view_mask)) continue;
             position attack_pos = origin + dir_to_vec(opposite(dir));
-            if(!is_empty(attack_pos) && opponent_pos != attack_pos) continue;
+            if(!is_empty(attack_pos, view_mask) && opponent_pos != attack_pos) continue;
 
             Path p = quickest_path(opponent_pos, attack_pos, NB_POINTS_ACTION-COUT_POUSSER, moi());
             if(p.cost <= NB_POINTS_ACTION-COUT_POUSSER) threat = true;
@@ -172,7 +189,7 @@ int count_threats(position origin)
     return threats;
 }
 
-AttackInfo best_opponent_attack(int opponent_id)
+AttackInfo best_opponent_attack(int opponent_id, int view_mask)
 {
     AttackInfo best_attack;
     best_attack.score = 0;
@@ -193,9 +210,9 @@ AttackInfo best_opponent_attack(int opponent_id)
 
         for(direction dir : DIR)
         {
-            if(!can_push_toward(ally_pos, dir)) continue;
+            if(!can_push_toward(ally_pos, dir, view_mask)) continue;
             position attack_pos = ally_pos + dir_to_vec(opposite(dir));
-            if(!is_empty(attack_pos) && opponent_pos != attack_pos) continue;
+            if(!is_empty(attack_pos, view_mask) && opponent_pos != attack_pos) continue;
 
             Path p = quickest_path(opponent_pos, attack_pos, NB_POINTS_ACTION-COUT_POUSSER, moi());
             if(p.cost > NB_POINTS_ACTION-COUT_POUSSER) continue;
