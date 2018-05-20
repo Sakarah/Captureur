@@ -169,18 +169,18 @@ int alien_score(alien_info alien)
 const int NB_POSSIBLE_THREATS = 8;
 const int NB_NORMAL_THREATS = 4;
 
-#include <cmath>
-
+// TODO: Vérifier la pertinence de cette approche
 double alien_def_score(alien_info alien)
 {
     // TODO: precompute this
     //                                     vvvvvvvvvvvvvvvvvvvvvvvvvvvv
     std::vector<ThreatAxis> threat_axies = pos_threats_axies(alien.pos);
-
-    // Eviter les sur-estimations / sous-estimations à cause du facteur défensif
-    return double(alien_score(alien))
-            * (1+std::sqrt(NB_POSSIBLE_THREATS)-std::sqrt(threat_axies.size()))
-            / (1+std::sqrt(NB_POSSIBLE_THREATS)-std::sqrt(NB_NORMAL_THREATS));
+    int score = alien_score(alien);
+    if(threat_axies.size() < 4)
+    {
+        score *= (1+(4-threat_axies.size())/4);
+    }
+    return score;
 }
 
 direction find_dir(position origin, position target)
