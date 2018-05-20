@@ -104,6 +104,9 @@ Path quickest_path(position from, position to)
                     if(to.ligne < step.ligne) dir = NORD;
                     else dir = SUD;
                 }
+
+                if(agent_sur_case(to) == adversaire()) path.push_front(Move{ACTION_POUSSER, dir});
+
                 if(dist(to, step) > 1) path.push_front(Move{ACTION_GLISSER, dir});
                 else path.push_front(Move{ACTION_DEPLACER, dir});
 
@@ -118,6 +121,10 @@ Path quickest_path(position from, position to)
             if(is_empty(neigh))
             {
                 queue.push(DijkNode{node.dist + COUT_DEPLACEMENT, neigh, node.pos});
+            }
+            else if(agent_sur_case(neigh) == adversaire())
+            {
+                queue.push(DijkNode{node.dist + COUT_DEPLACEMENT + COUT_POUSSER, neigh, node.pos});
             }
 
             position glide_pos = glide_dest(node.pos, dir);

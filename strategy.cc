@@ -132,5 +132,5 @@ Idle::Idle(int agent_id)
 
 void Idle::apply()
 {
-    std::cout << "idle..." << std::endl;
+    std::cout << agent << " => idle..." << std::endl;
 }
