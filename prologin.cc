@@ -11,8 +11,8 @@ void partie_init()
 /// Fonction appelée à chaque tour.
 void jouer_tour()
 {
-    std::clock_t begin, end;
-    begin = std::clock();
+    std::chrono::time_point<std::chrono::system_clock> start, end;
+    start = std::chrono::system_clock::now();
 
     std::vector<alien_info> aliens = liste_aliens();
 
@@ -105,8 +105,9 @@ void jouer_tour()
         delete agent_strategy[agent];
     }
 
-    end = std::clock();
-    std::cout << "elapsed time: " << double(end - begin)/CLOCKS_PER_SEC << std::endl;
+    end = std::chrono::system_clock::now();
+    std::chrono::duration<double> elapsed_seconds = end-start;
+    std::cout << "elapsed time: " << elapsed_seconds.count() << "s\n";
 }
 
 /// Fonction appelée à la fin de la partie.

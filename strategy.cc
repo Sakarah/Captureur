@@ -138,6 +138,7 @@ ElimThreat::ElimThreat(int agent_id, int opp_id)
     position ally_pos = atk.target;
 
     if(alien_sur_case(adv_pos)) return;
+    std::vector<position> def_positions;
 
     direction dir = find_dir(ally_pos, adv_pos);
     if(dir != INVALIDE)
@@ -146,25 +147,38 @@ ElimThreat::ElimThreat(int agent_id, int opp_id)
 
         for(position def_pos = ally_pos+dir_vec; def_pos != adv_pos; def_pos = def_pos + dir_vec)
         {
-            Path p = quickest_path(my_position, def_pos, NB_POINTS_ACTION);
-            if(p.cost > NB_POINTS_ACTION) continue;
+            if(type_case(def_pos) != LIBRE) break;
+            def_positions.push_back(def_pos);
+        }
+    }
 
-            // TODO : Better move emulation
-            int cancel_count = 0;
-            for(Move m : p.path)
-            {
-                if(perform_move(agent, m) != OK) break;
-                cancel_count++;
-            }
-            AttackInfo other_atk = best_opponent_attack(opp_id);
-            for(int c = 0; c < cancel_count; c++) annuler();
+    def_positions.push_back(atk.attack_pos);
 
-            double cur_score = atk.score - other_atk.score;
-            if(cur_score > score)
-            {
-                score = cur_score;
-                std::swap(p.path, moves);
-            }
+    direction atk_axis = find_dir(atk.attack_pos, atk.target);
+    def_positions.push_back(atk.target + dir_to_vec(atk_axis));
+
+    if(atk.target + dir_to_vec(atk_axis) == atk.attack_pos) std::cout << "WTF???";
+
+    for(position def_pos : def_positions)
+    {
+        Path p = quickest_path(my_position, def_pos, NB_POINTS_ACTION);
+        if(p.cost > NB_POINTS_ACTION) continue;
+
+        // TODO : Better move emulation
+        int cancel_count = 0;
+        for(Move m : p.path)
+        {
+            if(perform_move(agent, m) != OK) break;
+            cancel_count++;
+        }
+        AttackInfo other_atk = best_opponent_attack(opp_id);
+        for(int c = 0; c < cancel_count; c++) annuler();
+
+        double cur_score = atk.score - other_atk.score;
+        if(cur_score > score)
+        {
+            score = cur_score;
+            std::swap(p.path, moves);
         }
     }
 
