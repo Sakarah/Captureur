@@ -8,6 +8,7 @@ GoToAlien::GoToAlien(int agent_id, const alien_info& alien)
     position my_position = position_agent(moi(), agent);
 
     int tour_depart = alien.tour_invasion + alien.duree_invasion;
+    tour_depart = std::min(tour_depart, 100);
 
     // Vérifier que l'alien est encore/bientôt là
     if(tour_actuel() + 5 < alien.tour_invasion) return; // Pas encore là
@@ -48,6 +49,7 @@ PushEnemy::PushEnemy(int agent_id, const alien_info& alien)
     position my_position = position_agent(moi(), agent);
 
     int tour_depart = alien.tour_invasion + alien.duree_invasion;
+    tour_depart = std::min(tour_depart, 100);
 
     // Vérifier que l'alien est là
     if(tour_actuel() < alien.tour_invasion) return; // Pas encore là
@@ -244,6 +246,7 @@ void Idle::apply()
 {
     std::cout << agent << " => idle..." << std::endl;
 
+    // Se rapprocher de quelqu'un de notre équipe
     position my_pos = position_agent(moi(), agent);
     std::deque<Move> moves;
     int dist = 25*25*25;
