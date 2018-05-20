@@ -1,7 +1,7 @@
 #ifndef STRATEGY_HH
 #define STRATEGY_HH
 
-#include "map.hh"
+#include "dijkstra.hh"
 
 class Strategy
 {

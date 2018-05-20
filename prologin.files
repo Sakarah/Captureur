@@ -1,3 +1,5 @@
+dijkstra.cc
+dijkstra.hh
 map.cc
 map.hh
 mars.map
