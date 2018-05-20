@@ -189,8 +189,10 @@ ElimThreat::ElimThreat(int agent_id, int opp_id)
         position attack_pos = adv_pos + dir_to_vec(opposite(pdir));
         if(!is_empty(attack_pos) && my_position != attack_pos) continue;
 
-        Path push_path = quickest_path(my_position, attack_pos, NB_POINTS_ACTION-COUT_POUSSER);
-        if(push_path.cost <= NB_POINTS_ACTION-COUT_POUSSER)
+        bool is_just_near = dist(adv_pos, ally_pos) == 1;
+        int min_action_left = NB_POINTS_ACTION - COUT_POUSSER - (is_just_near ? 1 : 0);
+        Path push_path = quickest_path(my_position, attack_pos, min_action_left);
+        if(push_path.cost <= min_action_left)
         {
             // TODO : Better move emulation here too
             int cancel_count = 0;
