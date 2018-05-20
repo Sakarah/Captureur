@@ -55,7 +55,7 @@ struct Threat
 std::vector<ThreatAxis> pos_threats_axies(position pos);
 
 /// Liste les menaces de l'adversaire sur une case
-std::vector<position> list_current_threats(position origin);
+//std::vector<position> list_current_threats(position origin);
 
 /// Ajoute les menaces en tant que faux aliens dans la liste
 std::vector<Threat> compute_threats(const std::vector<alien_info>& aliens);

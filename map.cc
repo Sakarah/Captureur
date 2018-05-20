@@ -235,7 +235,7 @@ std::vector<ThreatAxis> pos_threats_axies(position origin)
     return axies;
 }
 
-std::vector<position> list_current_threats(position origin)
+/*std::vector<position> list_current_threats(position origin)
 {
     std::vector<position> threats;
     for(direction dir : DIR)
@@ -252,9 +252,9 @@ std::vector<position> list_current_threats(position origin)
         if(agent_sur_case(pos) == adversaire()) threats.push_back(pos);
     }
     return threats;
-}
+}*/
 
-std::vector<Threat> compute_threats(const std::vector<alien_info>& aliens)
+/*std::vector<Threat> compute_threats(const std::vector<alien_info>& aliens)
 {
     std::vector<Threat> threats;
     for(alien_info alien: aliens)
@@ -279,4 +279,4 @@ std::vector<Threat> compute_threats(const std::vector<alien_info>& aliens)
         }
     }
     return threats;
-}
+}*/
