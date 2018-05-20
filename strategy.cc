@@ -10,7 +10,7 @@ GoToAlien::GoToAlien(int agent_id, const alien_info& alien)
     int tour_depart = alien.tour_invasion + alien.duree_invasion;
 
     // Vérifier que l'alien est encore/bientôt là
-    if(tour_actuel() + 3 < alien.tour_invasion) return; // Pas encore là
+    if(tour_actuel() + 5 < alien.tour_invasion) return; // Pas encore là
     if(alien.capture_en_cours == NB_TOURS_CAPTURE) return; // Déjà capturé
     if(tour_depart < tour_actuel()) return; // Déjà parti
 
@@ -243,4 +243,26 @@ Idle::Idle(int agent_id)
 void Idle::apply()
 {
     std::cout << agent << " => idle..." << std::endl;
+
+    position my_pos = position_agent(moi(), agent);
+    std::deque<Move> moves;
+    int dist = 25*25*25;
+    for(int i = 0 ; i < NB_AGENTS ; i++)
+    {
+        if(i == agent) continue;
+        position ally_pos = position_agent(moi(), i);
+        for(direction dir : DIR)
+        {
+            Path p = quickest_path(my_pos, ally_pos+dir_to_vec(dir));
+            if(p.cost < dist)
+            {
+                dist = p.cost;
+                std::swap(moves, p.path);
+            }
+        }
+    }
+    for(Move m: moves)
+    {
+        perform_move(agent, m);
+    }
 }
