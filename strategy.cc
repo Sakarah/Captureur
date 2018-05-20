@@ -98,7 +98,7 @@ StayOnAlien::StayOnAlien(int agent_id)
     alien_info alien = info_alien(my_position);
     if(alien.tour_invasion == -1) return;
 
-    score = alien_score(alien);
+    score = alien_def_score(alien);
 
     for(direction dir : DIR)
     {
@@ -107,7 +107,7 @@ StayOnAlien::StayOnAlien(int agent_id)
         if(can_push_toward(pushed, dir))
         {
             int enemy_cost = std::min(COUT_GLISSADE, dist(pushed, glide_dest(pushed, dir)));
-            double dir_score = alien_score(alien) * (1 + (enemy_cost / NB_POINTS_ACTION));
+            double dir_score = alien_def_score(alien) * (1 + (enemy_cost / NB_POINTS_ACTION));
             if(dir_score > score)
             {
                 push = true;

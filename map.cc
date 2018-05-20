@@ -146,6 +146,14 @@ direction opposite(direction dir)
     else return OUEST;
 }
 
+direction turn_trigo(direction dir)
+{
+    if(dir == NORD) return OUEST;
+    else if(dir == OUEST) return SUD;
+    else if(dir == SUD) return EST;
+    else return NORD;
+}
+
 bool can_push_toward(position pos, direction dir)
 {
     position obstacle = pos + dir_to_vec(dir);
@@ -156,6 +164,23 @@ bool can_push_toward(position pos, direction dir)
 int alien_score(alien_info alien)
 {
     return alien.points_capture * (1+alien.duree_invasion);
+}
+
+const int NB_POSSIBLE_THREATS = 8;
+const int NB_NORMAL_THREATS = 4;
+
+#include <cmath>
+
+double alien_def_score(alien_info alien)
+{
+    // TODO: precompute this
+    //                                     vvvvvvvvvvvvvvvvvvvvvvvvvvvv
+    std::vector<ThreatAxis> threat_axies = pos_threats_axies(alien.pos);
+
+    // Eviter les sur-estimations / sous-estimations à cause du facteur défensif
+    return double(alien_score(alien))
+            * (1+std::sqrt(NB_POSSIBLE_THREATS)-std::sqrt(threat_axies.size()))
+            / (1+std::sqrt(NB_POSSIBLE_THREATS)-std::sqrt(NB_NORMAL_THREATS));
 }
 
 direction find_dir(position origin, position target)
@@ -172,7 +197,45 @@ direction find_dir(position origin, position target)
     }
 }
 
-std::vector<position> list_pos_threats(position origin)
+std::vector<ThreatAxis> pos_threats_axies(position origin)
+{
+    std::vector<ThreatAxis> axies;
+    for(direction dir : DIR)
+    {
+        if(!can_push_toward(origin, opposite(dir))) continue;
+
+        ThreatAxis threat;
+        threat.push_pos = origin + dir_to_vec(dir);
+
+        if(type_case(threat.push_pos) != LIBRE) continue;
+        threat.dir = dir;
+        axies.push_back(threat);
+
+        // Add attack axies using nearby walls
+        direction turned_dir = turn_trigo(dir);
+        position left = threat.push_pos + dir_to_vec(turned_dir);
+        position right = threat.push_pos + dir_to_vec(opposite(turned_dir));
+        if(type_case(left) != LIBRE)
+        {
+            if(type_case(right) == LIBRE)
+            {
+                threat.dir = opposite(turned_dir);
+                axies.push_back(threat);
+            }
+        }
+        else
+        {
+            if(type_case(right) != LIBRE)
+            {
+                threat.dir = turned_dir;
+                axies.push_back(threat);
+            }
+        }
+    }
+    return axies;
+}
+
+std::vector<position> list_current_threats(position origin)
 {
     std::vector<position> threats;
     for(direction dir : DIR)
@@ -206,7 +269,7 @@ std::vector<Threat> compute_threats(const std::vector<alien_info>& aliens)
 
         int alien_val = alien_score(alien);
 
-        std::vector<position> alien_threats = list_pos_threats(alien.pos);
+        std::vector<position> alien_threats = list_current_threats(alien.pos);
         int nb_threats = alien_threats.size();
         for(position th_pos : alien_threats)
         {
