@@ -2,6 +2,38 @@
 #include <iostream>
 #include <chrono>
 
+/**
+ * Captureur - IA Prologin 2018
+ * Captureur est une IA qui essaye d'allier différentes stratégies à répartir sur les 4 manchots.
+ * Les manchots essayent tous de prendre un alien ou ennemi objectif pendant leur tour
+ * afin de maximiser le score qu'ils espèrent être capable d'obtenir.
+ * Si un manchot estime pouvoir remporter plus de points qu'un autre en prenant un objectif déjà attribué,
+ * le manchot qui l'avait précédemment devra changer d'objectif.
+ *
+ * Chaque alien vaut son nombre de points multiplié par un plus le temps qui a déjà été passé pour essayer de l'obtenir.
+ * Les aliens difficilement accessibles ou qui arrivent après font gagner moins de points.
+ * Toutes ces fonctions heuristiques cherchent à être homogènes et à ne pas introduire de constantes arbitraires.
+ *
+ * De plus pousser un ennemi (resp. aider un allié) est aussi modélisé par une estimation du nombre de points perdus (resp. non perdus).
+ *
+ * Pour connaître les emplacements accessibles, et y aller au plus vite on utilise un Dijkstra.
+ *
+ * On appelle stratégie le choix par un manchot d'effectuer l'une des quatres actions suivantes
+ * - Rester sur sa case
+ * - Pousser un ennemi
+ * - Aller chercher un alien
+ * - Aider un allié
+ *
+ * Si aucune action n'est utile, il se contente de se rapprocher d'un allié quelconque.
+ *
+ * Dans les idées ont été testées, il y avait d'autres stratégies de défense moins efficaces en pratiques,
+ * et une gestion de la visibilité dans le Dijkstra.
+ *
+ * Avec plus de temps j'aurais aimé être capable de demander une aide au déplacement à un allié,
+ * de former des structures défensives plus stables ou d'avoir une meilleure gestion de l'attribution des tâches.
+ */
+
+
 /// Fonction appelée au début de la partie.
 void partie_init()
 {
