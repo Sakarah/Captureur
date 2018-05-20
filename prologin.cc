@@ -68,6 +68,9 @@ void jouer_tour()
                     delete alien_strategy[best_alien];
                 }
 
+                std::cout << agent << " => l" << aliens[best_alien].pos.ligne
+                          << " c" << aliens[best_alien].pos.colonne << std::endl;
+
                 alien_strategy[best_alien] = best_strategy;
                 agent_strategy[agent] = best_strategy;
             }

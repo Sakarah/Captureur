@@ -61,7 +61,7 @@ PushEnemy::PushEnemy(int agent_id, const alien_info& alien)
     {
         if(!can_push_toward(alien.pos, dir)) continue;
         position attack_pos = alien.pos + dir_to_vec(opposite(dir));
-        if(!is_empty(attack_pos)) continue;
+        if(!is_empty(attack_pos) && my_position != attack_pos) continue;
 
         Path p = quickest_path(my_position, attack_pos);
         int turns_to_target = (p.cost+COUT_POUSSER+7)/8;
