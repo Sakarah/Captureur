@@ -33,15 +33,12 @@ GoToAlien::GoToAlien(int agent_id, const alien_info& alien)
     std::swap(moves, p.path);
 }
 
-int GoToAlien::apply()
+void GoToAlien::apply()
 {
-    int nb_moves = 0;
     for(Move m: moves)
     {
         if(perform_move(agent, m) != OK) break;
-        nb_moves++;
     }
-    return nb_moves;
 }
 
 PushEnemy::PushEnemy(int agent_id, const alien_info& alien)
@@ -81,19 +78,14 @@ PushEnemy::PushEnemy(int agent_id, const alien_info& alien)
     }
 }
 
-int PushEnemy::apply()
+void PushEnemy::apply()
 {
-    int nb_moves = 0;
     for(Move m: moves)
     {
-        if(perform_move(agent, m) != OK) return nb_moves;
-        nb_moves++;
+        if(perform_move(agent, m) != OK) return;
     }
-    if(pousser(agent, push_dir) != OK) return nb_moves;
-    nb_moves++;
-    if(deplacer(agent, push_dir) != OK) return nb_moves;
-    nb_moves++;
-    return nb_moves;
+    if(pousser(agent, push_dir) != OK) return;
+    if(deplacer(agent, push_dir) != OK) return;
 }
 
 StayOnAlien::StayOnAlien(int agent_id)
@@ -127,13 +119,9 @@ StayOnAlien::StayOnAlien(int agent_id)
     }
 }
 
-int StayOnAlien::apply()
+void StayOnAlien::apply()
 {
-    if(push)
-    {
-        if(pousser(agent, push_dir) == OK) return 1;
-    }
-    return 0;
+    if(push) pousser(agent, push_dir);
 }
 
 ElimThreat::ElimThreat(int agent_id, Threat threat)
@@ -173,22 +161,17 @@ ElimThreat::ElimThreat(int agent_id, Threat threat)
     }
 }
 
-int ElimThreat::apply()
+void ElimThreat::apply()
 {
-    int nb_moves = 0;
     for(Move m: moves)
     {
-        if(perform_move(agent, m) != OK) return nb_moves;
-        nb_moves++;
+        if(perform_move(agent, m) != OK) return;
     }
     if(push)
     {
-        if(pousser(agent, push_dir) != OK) return nb_moves;
-        nb_moves++;
-        if(deplacer(agent, push_dir) != OK) return nb_moves;
-        nb_moves++;
+        if(pousser(agent, push_dir) != OK) return;
+        deplacer(agent, push_dir); // Prend la place si possible
     }
-    return nb_moves;
 }
 
 Idle::Idle(int agent_id)
@@ -197,8 +180,7 @@ Idle::Idle(int agent_id)
     score = 0;
 }
 
-int Idle::apply()
+void Idle::apply()
 {
     std::cout << agent << " => idle..." << std::endl;
-    return 0;
 }
