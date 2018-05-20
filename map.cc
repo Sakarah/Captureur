@@ -163,8 +163,7 @@ int count_threats(position origin)
             position attack_pos = origin + dir_to_vec(opposite(dir));
             if(!is_empty(attack_pos) && opponent_pos != attack_pos) continue;
 
-            Dijkstra dijk(opponent_pos, NB_POINTS_ACTION-COUT_POUSSER, moi());
-            Path p = dijk.quickest_path(attack_pos);
+            Path p = quickest_path(opponent_pos, attack_pos, NB_POINTS_ACTION-COUT_POUSSER, moi());
             if(p.cost <= NB_POINTS_ACTION-COUT_POUSSER) threat = true;
         }
 
@@ -198,8 +197,7 @@ AttackInfo best_opponent_attack(int opponent_id)
             position attack_pos = ally_pos + dir_to_vec(opposite(dir));
             if(!is_empty(attack_pos) && opponent_pos != attack_pos) continue;
 
-            Dijkstra dijk(opponent_pos, NB_POINTS_ACTION-COUT_POUSSER, moi());
-            Path p = dijk.quickest_path(attack_pos);
+            Path p = quickest_path(opponent_pos, attack_pos, NB_POINTS_ACTION-COUT_POUSSER, moi());
             if(p.cost > NB_POINTS_ACTION-COUT_POUSSER) continue;
 
             if(alien_val > best_attack.score)

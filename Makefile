@@ -6,7 +6,7 @@ lib_TARGETS = champion
 # des flags de compilation.
 champion-srcs = prologin.cc map.cc dijkstra.cc strategy.cc
 champion-dists = map.hh dijkstra.hh strategy.hh
-champion-cxxflags = -std=c++11 -Wall -Wextra -g
+champion-cxxflags = -std=c++11 -Wall -Wextra -O2
 
 # Evite de toucher a ce qui suit
 champion-dists += prologin.hh

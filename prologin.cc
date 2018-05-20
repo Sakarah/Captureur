@@ -14,9 +14,8 @@ void jouer_tour()
     std::chrono::time_point<std::chrono::system_clock> start, end;
     start = std::chrono::system_clock::now();
 
-    update_static_tabs();
-
     std::vector<alien_info> aliens = liste_aliens();
+
     std::vector<Strategy*> alien_strategy(aliens.size()+4, nullptr);
     Strategy* agent_strategy[NB_AGENTS] = { nullptr, nullptr, nullptr, nullptr };
     int fixed_strategies = 0;

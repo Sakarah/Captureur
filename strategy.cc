@@ -5,6 +5,7 @@ GoToAlien::GoToAlien(int agent_id, const alien_info& alien)
 {
     agent = agent_id;
     score = -0;
+    position my_position = position_agent(moi(), agent);
 
     int tour_depart = alien.tour_invasion + alien.duree_invasion;
 
@@ -13,7 +14,7 @@ GoToAlien::GoToAlien(int agent_id, const alien_info& alien)
     if(alien.capture_en_cours == NB_TOURS_CAPTURE) return; // Déjà capturé
     if(tour_depart < tour_actuel()) return; // Déjà parti
 
-    Path p = my_dijkstra[agent_id].quickest_path(alien.pos);
+    Path p = quickest_path(my_position, alien.pos);
     int turns_to_target = (p.cost+7)/8;
     int turns_to_alien = std::max(turns_to_target, alien.tour_invasion - tour_actuel());
 
@@ -62,7 +63,7 @@ PushEnemy::PushEnemy(int agent_id, const alien_info& alien)
         position attack_pos = alien.pos + dir_to_vec(opposite(dir));
         if(!is_empty(attack_pos) && my_position != attack_pos) continue;
 
-        Path p = my_dijkstra[agent_id].quickest_path(attack_pos);
+        Path p = quickest_path(my_position, attack_pos);
         int turns_to_target = (p.cost+COUT_POUSSER+7)/8;
 
         if(turns_to_target > turns_before_capture) continue;
@@ -160,7 +161,7 @@ ElimThreat::ElimThreat(int agent_id, int opp_id)
 
     for(position def_pos : def_positions)
     {
-        Path p = my_dijkstra[agent_id].quickest_path(def_pos);
+        Path p = quickest_path(my_position, def_pos, NB_POINTS_ACTION);
         if(p.cost > NB_POINTS_ACTION) continue;
 
         // TODO : Better move emulation
@@ -190,7 +191,7 @@ ElimThreat::ElimThreat(int agent_id, int opp_id)
 
         bool is_just_near = dist(adv_pos, ally_pos) == 1;
         int min_action_left = NB_POINTS_ACTION - COUT_POUSSER - (is_just_near ? 1 : 0);
-        Path push_path = my_dijkstra[agent].quickest_path(attack_pos);
+        Path push_path = quickest_path(my_position, attack_pos, min_action_left);
         if(push_path.cost <= min_action_left)
         {
             // TODO : Better move emulation here too
