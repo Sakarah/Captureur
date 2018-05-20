@@ -5,7 +5,7 @@ clients:
  - ./champion.so
  - ./champion.so
 names:
- - Sakarah 1
- - Sakarah 2
+ - Captureur Bleu
+ - Captureur Rouge
 spectators:
  - /opt/prologin2018-gui.so

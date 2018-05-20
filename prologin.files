@@ -1,5 +1,6 @@
 map.cc
 map.hh
+play.yml
 strategy.cc
 strategy.hh
 symmetry.map

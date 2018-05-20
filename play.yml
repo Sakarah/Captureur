@@ -1,0 +1,10 @@
+rules: libprologin2018.so
+verbose: 3
+map: symmetry.map
+clients:
+ - /opt/prologin2018-gui.so
+ - ./champion.so
+names:
+ - Humain
+ - Captureur
+time: -1
