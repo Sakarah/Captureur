@@ -61,7 +61,7 @@ bool operator<(const DijkNode& a, const DijkNode& b)
 }
 
 /// Return the move sequence between two points that is the quickest in terms of action points.
-Path quickest_path(position from, position to)
+Path quickest_path(position from, position to, int action_limit)
 {
     if(from == to) return Path{0, std::deque<Move>()};
     if(!is_empty(to)) return Path{1000000000, std::deque<Move>()};
@@ -80,8 +80,8 @@ Path quickest_path(position from, position to)
         DijkNode node = queue.top();
         queue.pop();
 
-        // Pas de planification sur plus de 3 tours
-        if(node.dist > 3*NB_POINTS_ACTION) break;
+        // Pas de planification sur trop longtemps
+        if(node.dist > action_limit) break;
 
         if(prev[node.pos.ligne][node.pos.colonne] != INVALID_POS) continue;
         prev[node.pos.ligne][node.pos.colonne] = node.prev;
@@ -156,4 +156,64 @@ bool can_push_toward(position pos, direction dir)
 int alien_score(alien_info alien)
 {
     return alien.points_capture * (1+alien.duree_invasion);
+}
+
+direction find_dir(position origin, position target)
+{
+    if(origin.ligne == target.ligne)
+    {
+        if(origin.colonne < target.colonne) return EST;
+        else return OUEST;
+    }
+    else
+    {
+        if(origin.ligne < target.ligne) return SUD;
+        else return NORD;
+    }
+}
+
+std::vector<position> list_pos_threats(position origin)
+{
+    std::vector<position> threats;
+    for(direction dir : DIR)
+    {
+        if(!can_push_toward(origin, opposite(dir))) continue;
+
+        position dir_vec = dir_to_vec(dir);
+        position pos = origin + dir_vec;
+        while(is_empty(pos) || agent_sur_case(pos) == moi())
+        {
+            pos = pos + dir_vec;
+        }
+
+        if(agent_sur_case(pos) == adversaire()) threats.push_back(pos);
+    }
+    return threats;
+}
+
+std::vector<Threat> compute_threats(const std::vector<alien_info>& aliens)
+{
+    std::vector<Threat> threats;
+    for(alien_info alien: aliens)
+    {
+        if(!alien_sur_case(alien.pos)) continue;
+        if(agent_sur_case(alien.pos) != moi()) continue;
+
+        int tour_depart = alien.tour_invasion + alien.duree_invasion;
+        int turns_before_capture = NB_TOURS_CAPTURE - alien.capture_en_cours;
+        // Vérifier que la capture par l'allié est toujours possible
+        if(tour_depart - tour_actuel() < turns_before_capture) continue;
+
+        int alien_val = alien_score(alien);
+
+        std::vector<position> alien_threats = list_pos_threats(alien.pos);
+        int nb_threats = alien_threats.size();
+        for(position th_pos : alien_threats)
+        {
+            // Homogeneity: Here implicit division by one turn
+            //                               vvvvvvvvvvvvvvvvvvvv
+            threats.push_back(Threat{th_pos, alien_val/nb_threats, alien.pos});
+        }
+    }
+    return threats;
 }

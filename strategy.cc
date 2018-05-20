@@ -124,6 +124,56 @@ void StayOnAlien::apply()
     if(push) pousser(agent, push_dir);
 }
 
+ElimThreat::ElimThreat(int agent_id, Threat threat)
+{
+    push = false;
+    agent = agent_id;
+    score = -0;
+
+    position my_position = position_agent(moi(), agent);
+    direction dir = find_dir(threat.ally_pos, threat.adv_pos);
+    position dir_vec = dir_to_vec(dir);
+
+    for(position def_pos = threat.ally_pos+dir_vec; def_pos != threat.adv_pos; def_pos = def_pos + dir_vec)
+    {
+        Path p = quickest_path(my_position, def_pos, NB_POINTS_ACTION);
+        if(p.cost > NB_POINTS_ACTION) continue;
+
+        score = threat.value;
+        std::swap(p.path, moves);
+    }
+
+    // Pousse si possible
+    for(direction pdir : DIR)
+    {
+        if(!can_push_toward(threat.adv_pos, pdir)) continue;
+        position attack_pos = threat.adv_pos + dir_to_vec(opposite(pdir));
+        if(!is_empty(attack_pos) && my_position != attack_pos) continue;
+
+        Path push_path = quickest_path(my_position, attack_pos, NB_POINTS_ACTION-COUT_POUSSER);
+        if(push_path.cost <= NB_POINTS_ACTION-COUT_POUSSER)
+        {
+            push = true;
+            push_dir = pdir;
+            score = threat.value;
+            std::swap(push_path.path, moves);
+        }
+    }
+}
+
+void ElimThreat::apply()
+{
+    for(Move m: moves)
+    {
+        if(perform_move(agent, m) != OK) return;
+    }
+    if(push)
+    {
+        if(pousser(agent, push_dir) != OK) return;
+        deplacer(agent, push_dir); // Prend la place si possible
+    }
+}
+
 Idle::Idle(int agent_id)
 {
     agent = agent_id;

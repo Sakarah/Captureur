@@ -41,6 +41,17 @@ private:
     direction push_dir;
 };
 
+class ElimThreat : public Strategy
+{
+public:
+    ElimThreat(int agent_id, Threat threat);
+    void apply();
+private:
+    std::deque<Move> moves;
+    bool push;
+    direction push_dir;
+};
+
 class Idle : public Strategy
 {
 public:
