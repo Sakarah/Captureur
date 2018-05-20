@@ -1,5 +1,6 @@
 map.cc
 map.hh
+mars.map
 play.yml
 strategy.cc
 strategy.hh
